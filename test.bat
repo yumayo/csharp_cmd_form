@@ -1,0 +1,2 @@
+ECHO hogehoge
+PAUSE
