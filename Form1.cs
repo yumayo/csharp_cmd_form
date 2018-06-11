@@ -13,10 +13,8 @@ namespace WindowsFormsApp1
 {
     public partial class Form1 : Form
     {
-        ProcessStartInfo startInfo = new ProcessStartInfo();
-        Process p;
-
-        string output = string.Empty;
+        Dictionary<string, TabPage> tabPages = new Dictionary<string, TabPage>();
+        Dictionary<string, CmdControl> cmdControlls = new Dictionary<string, CmdControl>();
 
         public Form1()
         {
@@ -25,25 +23,35 @@ namespace WindowsFormsApp1
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            richTextBox2.KeyDown += richTextBox2_KeyDown;
-            richTextBox2.KeyPress += richTextBox2_KeyPress;
-            richTextBox2.GotFocus += richTextBox2_GotFocus;
+            this.SuspendLayout();
 
-            startInfo.FileName = @"..\..\test.bat";
-            startInfo.CreateNoWindow = true;
-            startInfo.UseShellExecute = false;
-            startInfo.RedirectStandardOutput = true;
-            startInfo.RedirectStandardInput = true;
+            for (int i = 2; i < 5; i++)
+            {
+                var tabpage = new TabPage();
+                tabpage.Name = string.Format("tabPage{0}", i);
+                tabpage.Text = string.Format("tabPage{0}", i);
+                tabPages.Add(tabpage.Name, tabpage);
+
+                var cmdControl = new CmdControl();
+                cmdControl.Font = new System.Drawing.Font("Meiryo UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+                cmdControl.Location = new System.Drawing.Point(6, 7);
+                cmdControl.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+                cmdControl.Name = string.Format("cmdControl{0}", i);
+                cmdControl.Size = new System.Drawing.Size(908, 519);
+                cmdControl.TabIndex = 6;
+                tabpage.Controls.Add(cmdControl);
+
+                tabControl1.Controls.Add(tabpage);
+            }
+
+            this.ResumeLayout(false);
         }
-
-        delegate void ProcessDelegate(Process p);
-        delegate void TextDelegate(string text);
 
         private void button1_Click(object sender, EventArgs e)
         {
-            if(p == null)
+            if(cmdControl1.p == null)
             {
-                Task.Run(Test);
+                Task.Run(cmdControl1.Task);
             }
             else
             {
@@ -55,80 +63,9 @@ namespace WindowsFormsApp1
             }
         }
 
-        private void richTextBox1_TextChanged(object sender, EventArgs e)
+        private void cmdControl1_Load(object sender, EventArgs e)
         {
 
-        }
-
-        private async Task Test()
-        {
-            p = Process.Start(startInfo);
-            await Read(p);
-
-            // 子プロセスの標準入力を閉じて書き込みを終了する
-            p.StandardInput.Close();
-
-            p.Dispose();
-            p = null;
-        }
-
-        public void RichTextBox2TextAddText(string text)
-        {
-            output = richTextBox2.Text + text;
-            richTextBox2.Text += text;
-        }
-
-        private async Task Read(Process p)
-        {
-            while (!p.StandardOutput.EndOfStream)
-            {
-                char[] buffer = new char[1024];
-                int count = await p.StandardOutput.ReadAsync(buffer, 0, 1024);
-                string chunk = new string(buffer, 0, count);
-                chunk = chunk.Replace("\r\n", "\n");
-                TextDelegate d = new TextDelegate(RichTextBox2TextAddText);
-                this.Invoke(d, chunk);
-            }
-            int a = 0;
-        }
-
-        private string input = string.Empty;
-
-        private void richTextBox2_TextChanged(object sender, EventArgs e)
-        {
-            // Read以外で呼ばれた。
-            if (output.Length != richTextBox2.Text.Length)
-            {
-                input = richTextBox2.Text.Substring(output.Length);
-            }
-        }
-
-        private void richTextBox2_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Back || e.KeyCode == Keys.Delete)
-            {
-                e.Handled = richTextBox2.Text.Length == output.Length;
-            }
-            if (e.KeyCode == Keys.Return)
-            {
-                if (p != null)
-                {
-                    p.StandardInput.WriteLine(input);
-                }
-            }
-        }
-
-        private void richTextBox2_KeyPress(object sender, KeyPressEventArgs e)
-        {
-            if (e.KeyChar == (char)Keys.Back || e.KeyChar == (char)Keys.Delete)
-            {
-                e.Handled = richTextBox2.Text.Length == output.Length;
-            }
-        }
-
-        private void richTextBox2_GotFocus(object sender, EventArgs e)
-        {
-            richTextBox2.Select(0, 0);
         }
     }
 }
